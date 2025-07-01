@@ -6,11 +6,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableBatchProcessing //a very important annotation to enable spring batch in an application
-public class SpringBatchBootcamp001Application {
+@EnableBatchProcessing
+public class FlowApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringBatchBootcamp001Application.class, args);
+        SpringApplication.run(FlowApplication.class, args);
     }
 
 }
