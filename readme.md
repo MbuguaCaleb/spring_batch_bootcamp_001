@@ -109,11 +109,76 @@ State is maintained in a Job Repository
 
 Out of the Box, Spring provides two repositories,
 
-(a)Mapped One - Testing Puproses
+(a)Mapped One - Testing Puproses (uses hashMaps in JDBC)
 (b)JDBC One - Relational Database
 
 Data stored in Job repository is provided by the various components.
 If something goes wrong,we are able to restart at the step where the error occured
+
+wow, soemthing very important, Spring Batch Stores the state of the Job as it executes
+This is why we need at least an inmemeory DB when running a SpringBatch Application
+
+@EnableBatchProcessing, uses whatever datasource has been provided to create a Job repository
+spring batch stores the state of a Job in a Job repository as it executes
+
+```
+
+![job_execution.png](job_execution.png)
+
+```
+(a)A job is a flow of state or steps that we progress through
+(b)When we run a Job,we create a Job Instance / Job Execution
+
+(In above example, we have one Job Instance for each day)
+(Each time we launch a Job, we create a Job execution)
+(A single Job Instance, can have many Executions)
+
+(Example if a Job started running then failed, when restarted, it will
+have a different execution id)
+
+(It will have the same instance but different execution)
+(A job instance is considered complete if one of the  Job execution goes up to the end state)
+
+Summary
+One Job can have many Job Instances, (Logical run of a Job)
+One Job instance can have many Job executions (Physical run of a JOB)
+
+```
+
+![spring_batch_tables.png](spring_batch_tables.png)
+
+```
+Summary of tables:
+
+(a)batch_job_instance->Batch Job Instance -  takes in the job name and job key
+
+[The key is a hash of params that specifically distunguishes the Job)]
+
+(b)batch_job_execution->Batch step execution stores the pysical run of each Job
+
+we have a special column of STATTUS, and EXIT_CODE
+
+STATUS->Spring batch has specific distinct statuses which
+Can be COMPLETED,STARTING,STARTED,STOPPING,STOPPED,FAILED,ABANDONED,UNKNOWN
+
+EXIT_CODE-->Spring batch gives us the ability as developers to set the exit code
+we can set it with any programmatic message we wish.
+
+EXIT MESSAGE ->IF an exeption is thrown during processing, we are able to see the stack
+trace under the exit message.
+
+(c)batch_job_execution_params ->stores extra params if need be.
+
+(d)batch_step_execution ->one to many relationship with batch_job_execution
+(e)batch_job_execution_context
+
+(if an execution fails somwhere in between steps, it will restart from where it left off.
+
+(f)batch_step_execution_context -->greatly helps in restarting a step from where it was if it fails
+from somewhere in between
+
+waah, out of the box.
+If a flatfileitem reader fails, it will restart from where it left off.
 
 ```
 *Notes By*

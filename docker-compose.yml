@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: nfc_merchant_onboarding
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: learning_spring_batch
+      MYSQL_USER: ncf
+      MYSQL_PASSWORD: nfcpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - spring-boot-network
+
+volumes:
+  mysql-data:
+
+networks:
+  spring-boot-network:
+    driver: bridge
