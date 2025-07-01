@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class FlowApplication {
+public class SplitApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FlowApplication.class, args);
+        SpringApplication.run(SplitApplication.class, args);
     }
 
 }
