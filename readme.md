@@ -194,6 +194,19 @@ Howerver, transitons do not allow for more complex logic to be used in deciding 
 the next step will be, this is where we need decider
 
 ```
+
+**Job Step**
+
+```
+For more complex flows, we can be able to nest JOBS by having a JOB Step
+A Job step launches another jOB within the scope of a Step
+
+When we execute a Job within another JOB it is executed within the same JVM by default
+Within the sama JVM and execution thread
+
+If child job fails, if i have many JOB Steps,execution will stop from the parent JOB
+
+```
 *Notes By*
 
 ```

@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class DecisionApplication {
+public class NestedJobsApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DecisionApplication.class, args);
+        SpringApplication.run(NestedJobsApplication.class, args);
     }
 
 }
