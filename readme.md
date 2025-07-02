@@ -181,6 +181,19 @@ waah, out of the box.
 If a flatfileitem reader fails, it will restart from where it left off.
 
 ```
+
+**Decider**
+
+```
+For us to make a complex decision on which step to execute next,based on certain conditions,
+spring batch has an interface called the decider.
+
+Transitons, (where you execute next step based on the exit condition are one Option)
+
+Howerver, transitons do not allow for more complex logic to be used in deciding what
+the next step will be, this is where we need decider
+
+```
 *Notes By*
 
 ```

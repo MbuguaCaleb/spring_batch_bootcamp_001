@@ -1,18 +1,17 @@
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.job.builder.FlowBuilder;
-import org.springframework.batch.core.job.flow.Flow;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.core.job.flow.FlowExecutionStatus;
+import org.springframework.batch.core.job.flow.JobExecutionDecider;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 
 @Configuration
@@ -24,53 +23,71 @@ public class BatchConfiguration {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Tasklet tasklet() {
-        return new CountingTasklet();
+    public Step startStep() {
+        return stepBuilderFactory.get("startStep")
+                        .tasklet(((stepContribution, chunkContext) -> {
+                            System.out.println("This is the start tasklet");
+                            return RepeatStatus.FINISHED;
+                        })).build();
     }
 
-
-    //Remember a flow is just like a Job because it takes in a Step
-    //step has been constructed inline
     @Bean
-    public Flow flow1() {
-        return new FlowBuilder<Flow>("flow1")
-                .start(stepBuilderFactory.get("step1")
-                        .tasklet(tasklet()).build())
-                .build();
+    public Step evenStep() {
+        return stepBuilderFactory.get("evenStep")
+                .tasklet(((stepContribution, chunkContext) -> {
+                    System.out.println("This is the even tasklet");
+                    return RepeatStatus.FINISHED;
+                })).build();
     }
 
-
-    //Flow two is executing two flows in sequence
     @Bean
-    public Flow flow2() {
-        return new FlowBuilder<Flow>("flow2")
-                .start(stepBuilderFactory.get("step2")
-                        .tasklet(tasklet()).build())
-                .next(stepBuilderFactory.get("step3")
-                        .tasklet(tasklet()).build())
-                .build();
+    public Step oddStep() {
+        return stepBuilderFactory.get("oddStep")
+                .tasklet(((stepContribution, chunkContext) -> {
+                    System.out.println("This is the odd tasklet");
+                    return RepeatStatus.FINISHED;
+                })).build();
     }
 
-
-    //Parraleziation within the Job by Using Split
-    //i am executing flow one in parallel via asynctask executor and on it adding flow two
-    //the executor can take any number of flows and execute them in parallel
     @Bean
-    public Job job() {
+    public JobExecutionDecider decider(){
+        return new OddDecider();
+    }
+
+    //When running the decider, we should specify all the other return values
+    //that it will return and step associated based on the return value
+
+    //the below decider will run the startStep, then execute the odd step, then
+    //finally the even step
+
+    @Bean
+    public Job job(){
         return jobBuilderFactory.get("job")
-                .start(flow1())
-                .split(new SimpleAsyncTaskExecutor()).add(flow2())
-                .end()
-                .build();
+                .start(startStep())
+                .next(decider())
+                .from(decider()).on("ODD").to(oddStep())
+                .from(decider()).on("EVEN").to(evenStep())
+                .from(oddStep()).on("*").to(decider())
+//                .from(decider()).on("ODD").to(oddStep())
+//                .from(decider()).on("EVEN").to(evenStep())
+                .end().build();
     }
 
-    //job takes in a Step
-    //A Step of tasklet type
-    public static class CountingTasklet implements Tasklet {
+    //a decider is something I can run to establish a decision
+    //Decider takes in two params:jobExecution, stepExecution (previous step executed before this decider)
+    public static class OddDecider implements JobExecutionDecider {
+        private int count = 0;
+
         @Override
-        public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-            System.out.println(String.format("%s has been executed on thread %s", chunkContext.getStepContext().getStepName(), Thread.currentThread().getName()));
-            return RepeatStatus.FINISHED;
+        public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
+            count++;
+
+            if (count % 2 == 0) {
+                return new FlowExecutionStatus("EVEN");
+            } else {
+                return new FlowExecutionStatus("ODD");
+
+            }
         }
     }
 }
