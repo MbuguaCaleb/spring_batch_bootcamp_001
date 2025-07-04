@@ -207,6 +207,30 @@ Within the sama JVM and execution thread
 If child job fails, if i have many JOB Steps,execution will stop from the parent JOB
 
 ```
+
+**JOB Listeners**
+
+```
+
+We can be able to hook into the JOB LifeCycle at any given point
+
+(a)jobExecutionListener
+
+ (provides before and after job exeuction listeners)
+
+(b)StepExecution Listener
+
+(c)ChunkListners
+before and after chunk
+
+provides a method to be called after an error within chunk for additional
+error handling
+
+(d)Itemreadlistener
+(e)Item processListener
+(f)ItemWriteListener
+
+```
 *Notes By*
 
 ```
