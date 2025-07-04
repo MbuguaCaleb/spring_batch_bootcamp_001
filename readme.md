@@ -251,6 +251,23 @@ Unlike other beans that are instantiated during startUp, (SingleTon)
     
 Job parameters help us in restarting a Job where it failed from
 ```
+
+**ItemReaders**
+
+```
+There is a huge versitility of item readers and wirters avalable in Spring Batch
+State pf current read is maaintained and spring batch handles reatrtability very elagantly
+```
+
+
+**Reading from DATABASE**
+```
+
+(A)JDBC Cursor item reader
+(B)JDBC Pager item reader
+
+```
+
 *Notes By*
 
 ```
