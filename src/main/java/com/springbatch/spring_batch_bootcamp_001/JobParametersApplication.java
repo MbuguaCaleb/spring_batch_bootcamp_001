@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class ListenersApplication {
+public class JobParametersApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ListenersApplication.class, args);
+        SpringApplication.run(JobParametersApplication.class, args);
     }
 
 }

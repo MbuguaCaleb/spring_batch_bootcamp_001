@@ -231,6 +231,25 @@ error handling
 (f)ItemWriteListener
 
 ```
+![job_instance.png](job_instance.png)
+
+**Job Parameters**
+
+```
+Job Parameters are used to identify a Job instance
+A job instance is a logical run that can have many ezecutions
+i can pass a specific param to identify a specific job insance
+
+@StepScope comes in when we are running Job instances with parameters
+
+Unlike other beans that are instantiated during startUp, (SingleTon)
+    The stepScope is Lazily loaded, and instantiates at the time
+    the bean calling it is being executed
+    HelloWorld One will not be instantiated at startup, but will rather be instantiated at the time
+    the step is being executed
+    In the meantime a Proxy is used in its place to satisfy the dependency
+    
+```
 *Notes By*
 
 ```
