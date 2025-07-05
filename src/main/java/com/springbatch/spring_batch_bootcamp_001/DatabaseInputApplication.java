@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class InputInterfacesApplication {
+public class DatabaseInputApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(InputInterfacesApplication.class, args);
+        SpringApplication.run(DatabaseInputApplication.class, args);
     }
 
 }

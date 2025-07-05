@@ -264,7 +264,22 @@ State pf current read is maaintained and spring batch handles reatrtability very
 ```
 
 (A)JDBC Cursor item reader
+
+it opens up a cursor, and we are able to read data and map it into an OBJECT
+IT IS STATEFUL IN THAT IF SOMETHING HAPPENS MID WAY READING I CAN RESTART FROM WHERE I LEFT OFF
+
+Draw back, it is not thread safe
+OrderBy is very, very important for restartability [By ordering that is how we are able to remember our sequence)
+By ordering, it helps the item reader track on state
+
 (B)JDBC Pager item reader
+
+Jdbc Paging Item reader reads our input page by page
+unlike the cursor reader that tracks only the number that was read.
+the JDBC tracks the exact key for each value read via the SortKeys
+used to order the data and keep track of the last key read
+the sortkey must be a unique key
+other item readers include: JdbcPagingItemReader, HibernateItemReader, etc
 
 ```
 
