@@ -15,23 +15,24 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.domain;
 
-import org.springframework.jdbc.core.RowMapper;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.springframework.batch.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.item.file.transform.FieldSet;
+import org.springframework.validation.BindException;
 
 /**
  * @author MBUGUA Caleb
  * A java row
  */
 
-//A RowMapper transforms each row from a database query into a Java object — usually a domain or DTO class.
-public class CustomerRowMapper implements RowMapper<Customer> {
+//A FIELD Mapper transforms each row from the file into a Java object — usually a domain or DTO class.
+public class CustomerFieldSetMapper implements FieldSetMapper<Customer> {
+
 	@Override
-	public Customer mapRow(ResultSet resultSet, int i) throws SQLException {
-		return new Customer(resultSet.getLong("id"),
-				resultSet.getString("firstName"),
-				resultSet.getString("lastName"),
-				resultSet.getDate("birthdate"));
+	public Customer mapFieldSet(FieldSet fieldSet) throws BindException {
+		return new Customer(fieldSet.readLong("id"),
+				fieldSet.readString("firstName"),
+				fieldSet.readString("lastName"),
+				fieldSet.readDate("birthdate",
+						"yyyy-MM-dd HH:mm:ss"));
 	}
 }
