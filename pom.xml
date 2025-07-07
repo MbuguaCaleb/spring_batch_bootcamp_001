@@ -71,6 +71,15 @@
             <artifactId>lombok</artifactId>
             <scope>annotationProcessor</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.thoughtworks.xstream/xstream -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.ws/spring-oxm -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.ws/spring-oxm -->
+        <dependency>
+            <groupId>org.springframework.ws</groupId>
+            <artifactId>spring-oxm</artifactId>
+            <version>1.5.9</version>
+        </dependency>
     </dependencies>
 
     <build>

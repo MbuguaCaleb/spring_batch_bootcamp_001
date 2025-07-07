@@ -283,6 +283,13 @@ other item readers include: JdbcPagingItemReader, HibernateItemReader, etc
 
 ```
 
+**Reading from XML**
+
+```
+The individual items in the XML Object are considered as seperate chunks
+
+```
+
 *Notes By*
 
 ```

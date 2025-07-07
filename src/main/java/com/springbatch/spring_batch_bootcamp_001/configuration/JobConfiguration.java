@@ -1,21 +1,21 @@
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
 import com.springbatch.spring_batch_bootcamp_001.domain.Customer;
-import com.springbatch.spring_batch_bootcamp_001.domain.CustomerFieldSetMapper;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.xml.StaxEventItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.oxm.xstream.XStreamMarshaller;
 
 import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Configuration
@@ -27,55 +27,34 @@ public class JobConfiguration {
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
 
-    @Autowired
-    public DataSource dataSource;
 
 
-
-    //Spring Batch provides a wide range of readers for reading and processing
-    //almost everything
+    //Every Item in the XML File is treated as a chunk
     @Bean
-    public FlatFileItemReader<Customer> customerItemReader(){
+    public StaxEventItemReader<Customer> customerItemReader(){
+        XStreamMarshaller unmarshaller = new XStreamMarshaller();
 
-        FlatFileItemReader<Customer> reader = new FlatFileItemReader<>();
+        Map<String, Class> aliases = new HashMap<>();
+        aliases.put("customer", Customer.class);
+        unmarshaller.setAliases(aliases);
 
-        //skipping the firstLine,
-        //more things we can do with the reader:identifycomments,
-        //There are very many options from the flat file item reader in terms
-        //of reading input files
-        reader.setLinesToSkip(1);
+        StaxEventItemReader<Customer> reader = new StaxEventItemReader<>();
+        reader.setResource(new ClassPathResource("customers.xml"));
 
-
-        //setting resource to be read
-        reader.setResource(new ClassPathResource("customer.csv"));
-
-        //parse the file
-        DefaultLineMapper<Customer> customerLineMapper = new DefaultLineMapper<>();
-
-        //creates a distinct column for my file
-        //the below is a delimited line tokenizer
-        DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-
-        //names of the column i will divide my input into
-        tokenizer.setNames("id","firstName","lastName","birthdate");
-
-        customerLineMapper.setLineTokenizer(tokenizer);
-
-        //beanwrappersetMapper (research)
-        customerLineMapper.setFieldSetMapper(new CustomerFieldSetMapper());
-        customerLineMapper.afterPropertiesSet();
-
-        reader.setLineMapper(customerLineMapper);
+        //Defines each xml chunk
+        reader.setFragmentRootElementName("customer");
+        reader.setUnmarshaller(unmarshaller);
 
         return reader;
 
     }
 
+
     @Bean
     public ItemWriter<Customer> customItemWriter(){
         return items->{
             for (Customer item: items){
-                System.out.println(items);
+                System.out.println(item.toString());
             }
         };
     }
@@ -92,7 +71,7 @@ public class JobConfiguration {
 
     @Bean
     public Job job(){
-        return jobBuilderFactory.get("jobReadCsvFileThree")
+        return jobBuilderFactory.get("jobReadXmlFile")
                 .start(step1())
                 .build();
     }

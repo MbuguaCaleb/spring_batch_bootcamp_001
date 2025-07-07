@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class FlatfilesApplication {
+public class ReadingXmlApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FlatfilesApplication.class, args);
+        SpringApplication.run(ReadingXmlApplication.class, args);
     }
 
 }
