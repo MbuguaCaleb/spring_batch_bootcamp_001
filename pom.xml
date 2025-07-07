@@ -72,14 +72,20 @@
             <scope>annotationProcessor</scope>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.thoughtworks.xstream/xstream -->
-        <!-- https://mvnrepository.com/artifact/org.springframework.ws/spring-oxm -->
-        <!-- https://mvnrepository.com/artifact/org.springframework.ws/spring-oxm -->
+        <!-- Spring OXM - no version if using Spring Boot -->
         <dependency>
-            <groupId>org.springframework.ws</groupId>
+            <groupId>org.springframework</groupId>
             <artifactId>spring-oxm</artifactId>
-            <version>1.5.9</version>
         </dependency>
+
+        <!-- XStream with explicit version -->
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.20</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.oxm.xstream.XStreamMarshaller;
 
-import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +29,7 @@ public class JobConfiguration {
 
 
     //Every Item in the XML File is treated as a chunk
+    //the xml reader is stateful in that if an execution fails, it will restart from where it left off
     @Bean
     public StaxEventItemReader<Customer> customerItemReader(){
         XStreamMarshaller unmarshaller = new XStreamMarshaller();
