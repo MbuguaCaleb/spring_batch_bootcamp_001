@@ -5,12 +5,14 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+
+//We are able to read from many input files at once
 @SpringBootApplication
 @EnableBatchProcessing
-public class ReadingXmlApplication {
+public class FlatFilesApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ReadingXmlApplication.class, args);
+        SpringApplication.run(FlatFilesApplication.class, args);
     }
 
 }

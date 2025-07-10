@@ -290,6 +290,24 @@ The individual items in the XML Object are considered as seperate chunks
 
 ```
 
+**Managing of State Within a Step**
+
+```
+(a)ItemStream 
+
+Within a Step, State is just as important,this is where ItemStream comes in
+Item Stram interface
+
+Help a developer to get access to the component where state is maintained
+
+(b)ExecutionContext
+Both the Job and the step have execution context that maintains state
+(Ellaboate map that contains state of the component)
+
+(Execution context is where state is stored as the component runs)
+
+
+```
 *Notes By*
 
 ```

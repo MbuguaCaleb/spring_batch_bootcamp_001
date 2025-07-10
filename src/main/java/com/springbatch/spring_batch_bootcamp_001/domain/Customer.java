@@ -15,18 +15,21 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.domain;
 
+import org.springframework.batch.item.ResourceAware;
+import org.springframework.core.io.Resource;
+
 import java.util.Date;
 
-/**
- * @author Michael Minella
- */
-public class Customer {
+//The resource aware helps us in knowing each file the record was read from
+
+public class Customer implements ResourceAware {
 
 	private final long id;
 
 	private final String firstName;
 
 	private final String lastName;
+	private Resource resource;
 
 	private final Date birthdate;
 
@@ -46,4 +49,9 @@ public class Customer {
 				", birthdate=" + birthdate +
 				'}';
 	}
+
+	public void setResource(Resource resource) {
+		this.resource = resource;
+	}
+
 }
