@@ -6,13 +6,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
-//We are able to read from many input files at once
 @SpringBootApplication
 @EnableBatchProcessing
-public class FlatFilesApplication {
+public class StatefulReadingApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FlatFilesApplication.class, args);
+        SpringApplication.run(StatefulReadingApplication.class, args);
     }
 
 }
