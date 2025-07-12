@@ -4,14 +4,12 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Configuration
 public class JobConfiguration {
@@ -23,41 +21,43 @@ public class JobConfiguration {
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
-    @Bean
-    @StepScope
-    public StatefulItemReader itemReader() {
-        List<String> items = new ArrayList<>(100);
 
-        for(int i = 1; i <= 100; i++) {
+    //List Item reader, takes in a List and returns all the items in the List
+    @Bean
+    public ListItemReader<String> itemReader(){
+
+        ArrayList<String> items = new ArrayList<>(100);
+
+        for (int i = 1; i <=100 ; i++) {
             items.add(String.valueOf(i));
         }
 
-        return new StatefulItemReader(items);
+        return new ListItemReader<>(items);
+
     }
 
     @Bean
-    public ItemWriter itemWriter() {
-        return (ItemWriter<String>) items -> {
-            for (String item : items) {
-                System.out.println(">> " + item);
-            }
-        };
+    public SysOutItemWriter itemWriter(){
+        return new SysOutItemWriter();
     }
 
+
+    //A step contains of a reader and writer
     @Bean
-    public Step step() {
-        return stepBuilderFactory.get("step1")
-                .<String, String>chunk(10)
+    public Step step(){
+        return stepBuilderFactory.get("step")
+                .<String,String> chunk(10)
                 .reader(itemReader())
                 .writer(itemWriter())
-                .stream(itemReader())
                 .build();
     }
 
     @Bean
-    public Job statefulJob() {
-        return jobBuilderFactory.get("statefulJob")
+    public Job job(){
+        return jobBuilderFactory.get("job")
                 .start(step())
                 .build();
     }
+
+
 }

@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class StatefulReadingApplication {
+public class ItemWriterOne {
 
     public static void main(String[] args) {
-        SpringApplication.run(StatefulReadingApplication.class, args);
+        SpringApplication.run(ItemWriterOne.class, args);
     }
 
 }
