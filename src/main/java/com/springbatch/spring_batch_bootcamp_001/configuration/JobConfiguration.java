@@ -1,41 +1,29 @@
-/*
- * Copyright 2015 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
-
 import com.springbatch.spring_batch_bootcamp_001.domain.Customer;
-import com.springbatch.spring_batch_bootcamp_001.domain.CustomerFieldSetMapper;
+import com.springbatch.spring_batch_bootcamp_001.domain.CustomerLineAggregator;
+import com.springbatch.spring_batch_bootcamp_001.domain.CustomerRowMapper;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.Order;
+import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
+import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 import javax.sql.DataSource;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * @author Michael Minella
+ * @author Mbugua Caleb
  */
 @Configuration
 public class JobConfiguration {
@@ -49,58 +37,68 @@ public class JobConfiguration {
 	@Autowired
 	public DataSource dataSource;
 
+
+	//We are reading from a database via pagingItemReader
 	@Bean
-	public FlatFileItemReader<Customer> customerItemReader() {
-		FlatFileItemReader<Customer> reader = new FlatFileItemReader<>();
+	public JdbcPagingItemReader<Customer> pagingItemReader() {
+		JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
 
-		reader.setLinesToSkip(1);
-		reader.setResource(new ClassPathResource("customer.csv"));
+		reader.setDataSource(this.dataSource);
+		reader.setFetchSize(10); //fetch chunks of ten
 
-		DefaultLineMapper<Customer> customerLineMapper = new DefaultLineMapper<>();
+		//the customerRowMapper is going to give me a CustomerObject, after reading from DB
+		//The input into the writer(), will be the Customer Object, with the toString()
+		reader.setRowMapper(new CustomerRowMapper());
 
-		DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-		tokenizer.setNames("id", "firstName", "lastName", "birthdate");
+		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
+		queryProvider.setSelectClause("id, firstName, lastName, birthdate");
+		queryProvider.setFromClause("from customer");
 
-		customerLineMapper.setLineTokenizer(tokenizer);
-		//maps each line to domain object
-		customerLineMapper.setFieldSetMapper(new CustomerFieldSetMapper());
-		customerLineMapper.afterPropertiesSet();
+		//sorting helps consistency
+		Map<String, Order> sortKeys = HashMap.newHashMap(1);
+		sortKeys.put("id", Order.ASCENDING);
 
-		reader.setLineMapper(customerLineMapper);
+		queryProvider.setSortKeys(sortKeys);
+
+		reader.setQueryProvider(queryProvider);
 
 		return reader;
 	}
 
-	//JDBC Batchitem writer
-	//execute a single JDBC UPDATE for all items within the chunk
 	@Bean
-	public JdbcBatchItemWriter<Customer> customerItemWriter() {
-		JdbcBatchItemWriter<Customer> itemWriter = new JdbcBatchItemWriter<>();
+	public FlatFileItemWriter<Customer> customerItemWriter() throws Exception {
+		FlatFileItemWriter<Customer> itemWriter = new FlatFileItemWriter<>();
 
-		// i need a datasource
-		itemWriter.setDataSource(this.dataSource);
-		itemWriter.setSql("INSERT INTO customer VALUES (:id, :firstName, :lastName, :birthdate)");
+		//Defines how an Object is going to be mapped into a String, that is going
+		//to be written in a file
 
-		//creates getter for each parameter item in my chunk as i write
-		itemWriter.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider());
+//		itemWriter.setLineAggregator(new PassThroughLineAggregator<>());
+		itemWriter.setLineAggregator(new CustomerLineAggregator());
+
+		//where i am writing myFile to
+		String customerOutputPath = File.createTempFile("customerOutput", ".out").getAbsolutePath();
+		System.out.println(">> Output Path: " + customerOutputPath);
+		itemWriter.setResource(new FileSystemResource(customerOutputPath));
 		itemWriter.afterPropertiesSet();
 
 		return itemWriter;
 	}
 
 	@Bean
-	public Step step1() {
+	public Step step1() throws Exception {
 		return stepBuilderFactory.get("step1")
 				.<Customer, Customer>chunk(10)
-				.reader(customerItemReader())
+				.reader(pagingItemReader())
 				.writer(customerItemWriter())
 				.build();
 	}
 
 	@Bean
-	public Job job() {
-		return jobBuilderFactory.get("jobSix")
+	public Job job() throws Exception {
+		return jobBuilderFactory.get("job")
 				.start(step1())
 				.build();
 	}
+
+
 }

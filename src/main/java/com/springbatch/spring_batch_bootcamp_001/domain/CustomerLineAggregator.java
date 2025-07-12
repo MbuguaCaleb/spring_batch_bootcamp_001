@@ -15,21 +15,25 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.domain;
 
-import org.springframework.batch.item.file.mapping.FieldSetMapper;
-import org.springframework.batch.item.file.transform.FieldSet;
-import org.springframework.validation.BindException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.batch.item.file.transform.LineAggregator;
 
-//used in the flat file reader to map each row into a domain object
-//it is going to be taking input from the file and mapping
-// it into this:FieldSetMapper<Customer> domain object
+//takes an object from the reader and converts it into a line that
+//is going to be written in a file
+public class CustomerLineAggregator implements LineAggregator<Customer> {
 
-public class CustomerFieldSetMapper implements FieldSetMapper<Customer> {
+	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
-	public Customer mapFieldSet(FieldSet fieldSet) throws BindException {
-		return new Customer(fieldSet.readLong("id"),
-				fieldSet.readString("firstName"),
-				fieldSet.readString("lastName"),
-				fieldSet.readDate("birthdate", "yyyy-MM-dd HH:mm:ss"));
+	public String aggregate(Customer item) {
+		try {
+
+			//returns a string that is appended at end of myFile
+			return objectMapper.writeValueAsString(item);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException("Unable to serialize Customer", e);
+		}
 	}
 }
