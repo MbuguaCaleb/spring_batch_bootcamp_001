@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class ItemWriterOne {
+public class DatabaseOutputApplicaton {
 
     public static void main(String[] args) {
-        SpringApplication.run(ItemWriterOne.class, args);
+        SpringApplication.run(DatabaseOutputApplicaton.class, args);
     }
 
 }
