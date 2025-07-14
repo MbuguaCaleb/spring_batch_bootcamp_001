@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class WriteToMultipleDestinationsApplication {
+public class ItemProcessorInterfaceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(WriteToMultipleDestinationsApplication.class, args);
+        SpringApplication.run(ItemProcessorInterfaceApplication.class, args);
     }
 
 

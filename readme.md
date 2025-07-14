@@ -293,6 +293,9 @@ The individual items in the XML Object are considered as seperate chunks
 **Managing of State Within a Step**
 
 ```
+
+Similar to jobExecution Listener which can help me hook into the lifecycle of a Job, But this is in a Step
+
 (a)ItemStream 
 
 Within a Step, State is just as important,this is where ItemStream comes in
@@ -306,6 +309,26 @@ Both the Job and the step have execution context that maintains state
 
 (Execution context is where state is stored as the component runs)
 
+(If i want to hook into the LifeCycle of a Step, this is where the Item Stream interface comes In)
+
+```
+
+
+**Item Processor**
+
+```
+
+//Basics ->Step One
+	//in a chunk step, the item reader is responsible for reading Input
+	//the item Writer for Writing the Output
+	//In the Processor However is where all the business Logic seats
+	
+	
+//The process method in the Item Processor is allowed to change the type if need be
+//It can for instance take in a customer Object and return an Accounts Object if the customer is related to the account
+
+//processor can also be used to fitler item,
+//if we return null to a process call, the items that return null are filtered out
 
 ```
 *Notes By*
