@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class FlatFileOutputApplication {
+public class XmlFileOutputApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FlatFileOutputApplication.class, args);
+        SpringApplication.run(XmlFileOutputApplication.class, args);
     }
 
 

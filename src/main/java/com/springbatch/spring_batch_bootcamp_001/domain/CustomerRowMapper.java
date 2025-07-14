@@ -20,7 +20,7 @@ import org.springframework.jdbc.core.RowMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-//Takes in the result set from my customer query and maps into a CustomerObject
+
 public class CustomerRowMapper implements RowMapper<Customer> {
 	@Override
 	public Customer mapRow(ResultSet resultSet, int i) throws SQLException {

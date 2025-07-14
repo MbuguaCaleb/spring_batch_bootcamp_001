@@ -1,7 +1,8 @@
+
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
+
 import com.springbatch.spring_batch_bootcamp_001.domain.Customer;
-import com.springbatch.spring_batch_bootcamp_001.domain.CustomerLineAggregator;
 import com.springbatch.spring_batch_bootcamp_001.domain.CustomerRowMapper;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -10,12 +11,12 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.oxm.xstream.XStreamMarshaller;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -23,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author Mbugua Caleb
+ * @author Michael Minella
  */
 @Configuration
 public class JobConfiguration {
@@ -38,26 +39,22 @@ public class JobConfiguration {
 	public DataSource dataSource;
 
 
-	//We are reading from a database via pagingItemReader
+	//reading from the database
 	@Bean
 	public JdbcPagingItemReader<Customer> pagingItemReader() {
 		JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
 
 		reader.setDataSource(this.dataSource);
-		reader.setFetchSize(10); //fetch chunks of ten
-
-		//the customerRowMapper is going to give me a CustomerObject, after reading from DB
-		//The input into the writer(), will be the Customer Object, with the toString()
+		reader.setFetchSize(10);
 		reader.setRowMapper(new CustomerRowMapper());
 
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
 		queryProvider.setSelectClause("id, firstName, lastName, birthdate");
 		queryProvider.setFromClause("from customer");
 
-		//sorting helps consistency
-		Map<String, Order> sortKeys = HashMap.newHashMap(1);
-		sortKeys.put("id", Order.ASCENDING);
+		Map<String, Order> sortKeys = new HashMap<>(1);
 
+		sortKeys.put("id", Order.ASCENDING);
 		queryProvider.setSortKeys(sortKeys);
 
 		reader.setQueryProvider(queryProvider);
@@ -66,19 +63,23 @@ public class JobConfiguration {
 	}
 
 	@Bean
-	public FlatFileItemWriter<Customer> customerItemWriter() throws Exception {
-		FlatFileItemWriter<Customer> itemWriter = new FlatFileItemWriter<>();
+	public StaxEventItemWriter<Customer> customerItemWriter() throws Exception {
 
-		//Defines how an Object is going to be mapped into a String, that is going
-		//to be written in a file
+		XStreamMarshaller marshaller = new XStreamMarshaller();
 
-//		itemWriter.setLineAggregator(new PassThroughLineAggregator<>());
-		itemWriter.setLineAggregator(new CustomerLineAggregator());
+		Map<String, Class> aliases = new HashMap<>();
+		aliases.put("customer", Customer.class);
 
-		//where i am writing myFile to
-		String customerOutputPath = File.createTempFile("customerOutput", ".out").getAbsolutePath();
+		marshaller.setAliases(aliases);
+
+		StaxEventItemWriter<Customer> itemWriter = new StaxEventItemWriter<>();
+
+		itemWriter.setRootTagName("customers");
+		itemWriter.setMarshaller(marshaller);
+		String customerOutputPath = File.createTempFile("customerOutput", ".xml").getAbsolutePath();
 		System.out.println(">> Output Path: " + customerOutputPath);
 		itemWriter.setResource(new FileSystemResource(customerOutputPath));
+
 		itemWriter.afterPropertiesSet();
 
 		return itemWriter;
@@ -99,6 +100,4 @@ public class JobConfiguration {
 				.start(step1())
 				.build();
 	}
-
-
 }
