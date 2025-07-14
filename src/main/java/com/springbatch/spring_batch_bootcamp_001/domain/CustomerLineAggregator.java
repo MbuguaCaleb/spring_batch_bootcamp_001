@@ -15,20 +15,22 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.domain;
 
-import org.springframework.jdbc.core.RowMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.batch.item.file.transform.LineAggregator;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
-/**
- * @author Michael Minella
- */
-public class CustomerRowMapper implements RowMapper<Customer> {
+public class CustomerLineAggregator implements LineAggregator<Customer> {
+
+	private ObjectMapper objectMapper = new ObjectMapper();
+
 	@Override
-	public Customer mapRow(ResultSet resultSet, int i) throws SQLException {
-		return new Customer(resultSet.getLong("id"),
-				resultSet.getString("firstName"),
-				resultSet.getString("lastName"),
-				resultSet.getDate("birthdate"));
+	public String aggregate(Customer item) {
+		try {
+			return objectMapper.writeValueAsString(item);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException("Unable to serialize Customer", e);
+		}
 	}
 }

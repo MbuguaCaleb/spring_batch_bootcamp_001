@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class XmlFileOutputApplication {
+public class WriteToMultipleDestinationsApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(XmlFileOutputApplication.class, args);
+        SpringApplication.run(WriteToMultipleDestinationsApplication.class, args);
     }
 
 
