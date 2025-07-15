@@ -15,26 +15,16 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.components;
 
-import org.springframework.batch.item.ItemWriter;
-
-import java.util.List;
-
 /**
  * @author Michael Minella
  */
-public class SkipItemWriter implements ItemWriter<String> {
+public class CustomException extends Exception {
 
-	private int attemptCount = 0;
+	public CustomException() {
+		super();
+	}
 
-	@Override
-	public void write(List<? extends String> items) throws Exception {
-		for (String item : items) {
-			if(item.equalsIgnoreCase("-84")) {
-				throw new CustomException("Write failed.  Attempt:" + attemptCount);
-			}
-			else {
-				System.out.println(item);
-			}
-		}
+	public CustomException(String msg) {
+		super(msg);
 	}
 }

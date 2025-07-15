@@ -15,16 +15,23 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.components;
 
-/**
- * @author Michael Minella
- */
-public class CustomRetryableException extends Exception {
+import org.springframework.batch.core.SkipListener;
 
-	public CustomRetryableException() {
-		super();
+/**
+ * the SkiplISTENER implements the skip listener interrfaace
+ */
+public class CustomSkipListener implements SkipListener {
+	@Override
+	public void onSkipInRead(Throwable t) {
 	}
 
-	public CustomRetryableException(String msg) {
-		super(msg);
+	@Override
+	public void onSkipInWrite(Object item, Throwable t) {
+		System.out.println(">> Skipping " + item + " because writing it caused the error: " + t.getMessage());
+	}
+
+	@Override
+	public void onSkipInProcess(Object item, Throwable t) {
+		System.out.println(">> Skipping " + item + " because processing it caused the error: " + t.getMessage());
 	}
 }

@@ -16,7 +16,8 @@
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
 
-import com.springbatch.spring_batch_bootcamp_001.components.CustomRetryableException;
+import com.springbatch.spring_batch_bootcamp_001.components.CustomException;
+import com.springbatch.spring_batch_bootcamp_001.components.CustomSkipListener;
 import com.springbatch.spring_batch_bootcamp_001.components.SkipItemProcessor;
 import com.springbatch.spring_batch_bootcamp_001.components.SkipItemWriter;
 import org.springframework.batch.core.Job;
@@ -26,10 +27,8 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,41 +60,31 @@ public class JobConfiguration {
 
 	@Bean
 	@StepScope
-	public SkipItemProcessor processor(@Value("#{jobParameters['skip']}")String skip) {
-		SkipItemProcessor processor = new SkipItemProcessor();
-
-		processor.setSkip(StringUtils.hasText(skip) && skip.equalsIgnoreCase("processor"));
-
-		return processor;
+	public SkipItemProcessor processor() {
+		return new SkipItemProcessor();
 	}
 
 	@Bean
 	@StepScope
-	public SkipItemWriter writer(@Value("#{jobParameters['skip']}")String skip) {
-		SkipItemWriter writer = new SkipItemWriter();
-
-		writer.setSkip(StringUtils.hasText(skip) && skip.equalsIgnoreCase("writer"));
-
-		return writer;
+	public SkipItemWriter writer() {
+		return new SkipItemWriter();
 	}
 
-	//We configure a Step with an exception to indicate that the item should be skipped
-	//in the skipLimit, we let SpringBatch know the items we should skip
+	//we can save off the items that have been skipped for later evaluation
 
 	@Bean
 	public Step step1() {
 		return stepBuilderFactory.get("step")
 				.<String, String>chunk(10)
 				.reader(reader())
-				.processor(processor(null))
-				.writer(writer(null))
+				.processor(processor())
+				.writer(writer())
 				.faultTolerant()
-				.skip(CustomRetryableException.class)
+				.skip(CustomException.class)
 				.skipLimit(15)
+				.listener(new CustomSkipListener())
 				.build();
 	}
-
-
 
 	@Bean
 	public Job job() {

@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class SkipApplication {
+public class SkipRetryListenersApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SkipApplication.class, args);
+        SpringApplication.run(SkipRetryListenersApplication.class, args);
     }
 
 
