@@ -366,6 +366,15 @@ We are able to configure out of the box the number of times we retry or even the
 	//Step {that is in the ,writer or processor)
 	//Item reader logic if forward only, it is not retriable
 
+ java -jar target/spring_batch_bootcamp_001-0.0.1-SNAPSHOT.jar -retry=writer
+```
+
+**Skipping**
+
+```
+	//We configure a Step with an exception to indicate that the item should be skipped
+	//in the skipLimit, we let SpringBatch know the items we should skip
+
 ```
 *Notes By*
 

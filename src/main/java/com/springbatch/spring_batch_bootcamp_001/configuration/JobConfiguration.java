@@ -17,8 +17,8 @@ package com.springbatch.spring_batch_bootcamp_001.configuration;
 
 
 import com.springbatch.spring_batch_bootcamp_001.components.CustomRetryableException;
-import com.springbatch.spring_batch_bootcamp_001.components.RetryItemProcessor;
-import com.springbatch.spring_batch_bootcamp_001.components.RetryItemWriter;
+import com.springbatch.spring_batch_bootcamp_001.components.SkipItemProcessor;
+import com.springbatch.spring_batch_bootcamp_001.components.SkipItemWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -48,7 +48,7 @@ public class JobConfiguration {
 
 	@Bean
 	@StepScope
-	public ListItemReader reader() {
+	public ListItemReader<String> reader() {
 
 		List<String> items = new ArrayList<>();
 
@@ -56,37 +56,32 @@ public class JobConfiguration {
 			items.add(String.valueOf(i));
 		}
 
-		ListItemReader<String> reader = new ListItemReader(items);
-
-		return reader;
+		return new ListItemReader<>(items);
 	}
-
-	//We are able to have a retry in any part of our Logic in a
-	//Step {that is in the ,writer or processor)
-	//Item reader logic if forward only, it is not retriable
 
 	@Bean
 	@StepScope
-	public RetryItemProcessor processor(@Value("#{jobParameters['retry']}")String retry) {
-		RetryItemProcessor processor = new RetryItemProcessor();
+	public SkipItemProcessor processor(@Value("#{jobParameters['skip']}")String skip) {
+		SkipItemProcessor processor = new SkipItemProcessor();
 
-		//configuring the retry
-		processor.setRetry(StringUtils.hasText(retry) && retry.equalsIgnoreCase("processor"));
+		processor.setSkip(StringUtils.hasText(skip) && skip.equalsIgnoreCase("processor"));
+
 		return processor;
 	}
 
 	@Bean
 	@StepScope
-	public RetryItemWriter writer(@Value("#{jobParameters['retry']}")String retry) {
-		RetryItemWriter writer = new RetryItemWriter();
-		//configure retry
-		writer.setRetry(StringUtils.hasText(retry) && retry.equalsIgnoreCase("writer"));
+	public SkipItemWriter writer(@Value("#{jobParameters['skip']}")String skip) {
+		SkipItemWriter writer = new SkipItemWriter();
+
+		writer.setSkip(StringUtils.hasText(skip) && skip.equalsIgnoreCase("writer"));
+
 		return writer;
 	}
 
-	//i indicate the exceptions i want retriable
-	//for retry, i need to make myStep fault-tolerant
-	//i also need to have an exception i have marked for retry
+	//We configure a Step with an exception to indicate that the item should be skipped
+	//in the skipLimit, we let SpringBatch know the items we should skip
+
 	@Bean
 	public Step step1() {
 		return stepBuilderFactory.get("step")
@@ -95,14 +90,16 @@ public class JobConfiguration {
 				.processor(processor(null))
 				.writer(writer(null))
 				.faultTolerant()
-				.retry(CustomRetryableException.class)
-				.retryLimit(15)
+				.skip(CustomRetryableException.class)
+				.skipLimit(15)
 				.build();
 	}
 
+
+
 	@Bean
 	public Job job() {
-		return jobBuilderFactory.get("jobRetryFour")
+		return jobBuilderFactory.get("job")
 				.start(step1())
 				.build();
 	}
