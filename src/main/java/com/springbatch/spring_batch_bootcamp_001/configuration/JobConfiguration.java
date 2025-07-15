@@ -15,18 +15,17 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
-import com.springbatch.spring_batch_bootcamp_001.domain.Customer;
-import com.springbatch.spring_batch_bootcamp_001.domain.CustomerLineAggregator;
-import com.springbatch.spring_batch_bootcamp_001.domain.CustomerRowMapper;
-import com.springbatch.spring_batch_bootcamp_001.domain.FilteringItemProcessor;
+import com.springbatch.spring_batch_bootcamp_001.domain.*;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
 import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +33,9 @@ import org.springframework.core.io.FileSystemResource;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -88,9 +89,22 @@ public class JobConfiguration {
 		return itemWriter;
 	}
 
+	//Spring Batch provides and out of the batch processor called the compositeItem Processor
 	@Bean
-	public FilteringItemProcessor itemProcessor() {
-		return new FilteringItemProcessor();
+	public CompositeItemProcessor<Customer, Customer> itemProcessor() throws Exception {
+
+		List<ItemProcessor<Customer, Customer>> delegates = new ArrayList<>(2);
+
+		delegates.add(new FilteringItemProcessor());
+		delegates.add(new UpperCaseItemProcessor());
+
+		CompositeItemProcessor<Customer, Customer> compositeItemProcessor =
+				new CompositeItemProcessor<>();
+
+		compositeItemProcessor.setDelegates(delegates);
+		compositeItemProcessor.afterPropertiesSet();
+
+		return compositeItemProcessor;
 	}
 
 	@Bean

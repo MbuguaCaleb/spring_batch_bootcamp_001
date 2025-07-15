@@ -6,15 +6,13 @@ import org.springframework.batch.item.ItemProcessor;
 /**
  * @author Michael Minella
  */
-public class FilteringItemProcessor implements ItemProcessor<Customer, Customer> {
+public class UpperCaseItemProcessor implements ItemProcessor<Customer, Customer> {
+
 	@Override
 	public Customer process(Customer item) throws Exception {
-
-		if(item.getId() % 2 == 0) {
-			return null;
-		}
-		else {
-			return item;
-		}
+		return new Customer(item.getId(),
+				item.getFirstName().toUpperCase(),
+				item.getLastName().toUpperCase(),
+				item.getBirthdate());
 	}
 }

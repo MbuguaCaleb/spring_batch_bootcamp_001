@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class FilteringItemProcessorApplication {
+public class CompositeItemProcessorApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FilteringItemProcessorApplication.class, args);
+        SpringApplication.run(CompositeItemProcessorApplication.class, args);
     }
 
 
