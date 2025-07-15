@@ -334,6 +334,7 @@ Both the Job and the step have execution context that maintains state
 ```
 
 
+
 **Restarteability**
 
 ```
@@ -347,6 +348,24 @@ it is the ability of a SpringBatch Job starting from where it left off
 
 	//step scope means each step is going to run its seperate instance
 	
+```
+
+**Spring Batch Retry**
+
+```
+Spring Batch prrovides the try again option using the spring retry liblary, we can retry
+processing or writing any liblary in the normal processing life cycle
+
+We are able to configure out of the box the number of times we retry or even the back off policy
+
+	//i indicate the exceptions i want retriable
+	//for retry, i need to make myStep fault-tolerant
+	//i also need to have an exception i have marked for retry
+	
+	//We are able to have a retry in any part of our Logic in a
+	//Step {that is in the ,writer or processor)
+	//Item reader logic if forward only, it is not retriable
+
 ```
 *Notes By*
 

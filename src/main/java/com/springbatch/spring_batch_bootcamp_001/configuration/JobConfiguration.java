@@ -1,21 +1,38 @@
-
+/*
+ * Copyright 2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
+
+import com.springbatch.spring_batch_bootcamp_001.components.CustomRetryableException;
+import com.springbatch.spring_batch_bootcamp_001.components.RetryItemProcessor;
+import com.springbatch.spring_batch_bootcamp_001.components.RetryItemWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Michael Minella
@@ -29,55 +46,64 @@ public class JobConfiguration {
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
 
-	//Restart
-	//Job repository is used to maintain the state of the Job as it is being executed
-	//When something goes wrong,this allows the job to start from where it left off
-
-	//By default, if an uncaught exception is found,Spring Batch will end processing of the JOB
-	//If the Job is restarted with the same params, spring batch will restart from where it left off
-
-	//step scope means each step is going to run its seperate instance
 	@Bean
 	@StepScope
-	public Tasklet restartTasklet(){
-		return new Tasklet() {
-			@Override
-			public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-				Map<String, Object> stepExecutionContext = chunkContext.getStepContext().getStepExecutionContext();
+	public ListItemReader reader() {
 
-				if(stepExecutionContext.containsKey("ran")) {
-					System.out.println("This time we'll let it go.");
-					return RepeatStatus.FINISHED;
-				}
-				else {
-					System.out.println("I don't think so...");
-					chunkContext.getStepContext().getStepExecution().getExecutionContext().put("ran", true);
-					throw new RuntimeException("Not this time...");
-				}
-			}
-		};
+		List<String> items = new ArrayList<>();
+
+		for(int i = 0; i < 100; i++) {
+			items.add(String.valueOf(i));
+		}
+
+		ListItemReader<String> reader = new ListItemReader(items);
+
+		return reader;
+	}
+
+	//We are able to have a retry in any part of our Logic in a
+	//Step {that is in the ,writer or processor)
+	//Item reader logic if forward only, it is not retriable
+
+	@Bean
+	@StepScope
+	public RetryItemProcessor processor(@Value("#{jobParameters['retry']}")String retry) {
+		RetryItemProcessor processor = new RetryItemProcessor();
+
+		//configuring the retry
+		processor.setRetry(StringUtils.hasText(retry) && retry.equalsIgnoreCase("processor"));
+		return processor;
 	}
 
 	@Bean
-	public Step step1(){
-		return stepBuilderFactory.get("step1")
-				.tasklet(restartTasklet())
-				.build();
+	@StepScope
+	public RetryItemWriter writer(@Value("#{jobParameters['retry']}")String retry) {
+		RetryItemWriter writer = new RetryItemWriter();
+		//configure retry
+		writer.setRetry(StringUtils.hasText(retry) && retry.equalsIgnoreCase("writer"));
+		return writer;
 	}
 
+	//i indicate the exceptions i want retriable
+	//for retry, i need to make myStep fault-tolerant
+	//i also need to have an exception i have marked for retry
 	@Bean
-	public Step step2(){
-		return stepBuilderFactory.get("step2")
-				.tasklet(restartTasklet())
+	public Step step1() {
+		return stepBuilderFactory.get("step")
+				.<String, String>chunk(10)
+				.reader(reader())
+				.processor(processor(null))
+				.writer(writer(null))
+				.faultTolerant()
+				.retry(CustomRetryableException.class)
+				.retryLimit(15)
 				.build();
 	}
 
 	@Bean
 	public Job job() {
-		return jobBuilderFactory.get("jobRestart")
+		return jobBuilderFactory.get("jobRetryFour")
 				.start(step1())
-				.next(step2())
 				.build();
 	}
-
 }
