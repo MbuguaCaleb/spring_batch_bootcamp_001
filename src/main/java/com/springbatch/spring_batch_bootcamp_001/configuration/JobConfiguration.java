@@ -15,29 +15,33 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
-
-import com.springbatch.spring_batch_bootcamp_001.components.CustomException;
-import com.springbatch.spring_batch_bootcamp_001.components.CustomSkipListener;
-import com.springbatch.spring_batch_bootcamp_001.components.SkipItemProcessor;
-import com.springbatch.spring_batch_bootcamp_001.components.SkipItemWriter;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor;
+import org.springframework.batch.core.converter.DefaultJobParametersConverter;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.support.SimpleJobOperator;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Michael Minella
  */
 @Configuration
-public class JobConfiguration {
+public class JobConfiguration implements ApplicationContextAware {
 
 	@Autowired
 	public JobBuilderFactory jobBuilderFactory;
@@ -45,51 +49,73 @@ public class JobConfiguration {
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
 
+	@Autowired
+	public JobExplorer jobExplorer;
+
+	@Autowired
+	public JobRepository jobRepository;
+
+	@Autowired
+	public JobRegistry jobRegistry;
+
+	@Autowired
+	public JobLauncher jobLauncher;
+
+	private ApplicationContext applicationContext;
+
+
+	//A map that is key value pairs ("jobName":"{jobNameValue}")
+	//on start up, this bean will register all jobs that are in my application
+	//so that they are available to the jobOperator when launching
 	@Bean
-	@StepScope
-	public ListItemReader<String> reader() {
+	public JobRegistryBeanPostProcessor jobRegistrar() throws Exception {
+		JobRegistryBeanPostProcessor registrar = new JobRegistryBeanPostProcessor();
 
-		List<String> items = new ArrayList<>();
+		registrar.setJobRegistry(this.jobRegistry);
+		registrar.setBeanFactory(this.applicationContext.getAutowireCapableBeanFactory());
+		registrar.afterPropertiesSet();
 
-		for(int i = 0; i < 100; i++) {
-			items.add(String.valueOf(i));
-		}
+		return registrar;
+	}
 
-		return new ListItemReader<>(items);
+	//the Job Operator is not provided out of the Box
+	//we need to configure this ourselves
+
+	@Bean
+	public JobOperator jobOperator() throws Exception {
+		SimpleJobOperator simpleJobOperator = new SimpleJobOperator();
+
+		simpleJobOperator.setJobLauncher(this.jobLauncher);
+		simpleJobOperator.setJobParametersConverter(new DefaultJobParametersConverter());
+		simpleJobOperator.setJobRepository(this.jobRepository);
+		simpleJobOperator.setJobExplorer(this.jobExplorer);
+		simpleJobOperator.setJobRegistry(this.jobRegistry);
+
+		simpleJobOperator.afterPropertiesSet();
+
+		return simpleJobOperator;
 	}
 
 	@Bean
 	@StepScope
-	public SkipItemProcessor processor() {
-		return new SkipItemProcessor();
-	}
-
-	@Bean
-	@StepScope
-	public SkipItemWriter writer() {
-		return new SkipItemWriter();
-	}
-
-	//we can save off the items that have been skipped for later evaluation
-
-	@Bean
-	public Step step1() {
-		return stepBuilderFactory.get("step")
-				.<String, String>chunk(10)
-				.reader(reader())
-				.processor(processor())
-				.writer(writer())
-				.faultTolerant()
-				.skip(CustomException.class)
-				.skipLimit(15)
-				.listener(new CustomSkipListener())
-				.build();
+	public Tasklet tasklet(@Value("#{jobParameters['name']}") String name) {
+		return (contribution, chunkContext) -> {
+			System.out.println(String.format("The job ran for %s", name));
+			return RepeatStatus.FINISHED;
+		};
 	}
 
 	@Bean
 	public Job job() {
-		return jobBuilderFactory.get("job")
-				.start(step1())
+		return jobBuilderFactory.get("uniqueJobName")
+				.start(stepBuilderFactory.get("step1")
+					.tasklet(tasklet(null))
+					.build())
 				.build();
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 }
