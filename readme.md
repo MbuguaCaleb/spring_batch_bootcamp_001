@@ -332,6 +332,22 @@ Both the Job and the step have execution context that maintains state
 //if we return null to a process call, the items that return null are filtered out
 
 ```
+
+
+**Restarteability**
+
+```
+it is the ability of a SpringBatch Job starting from where it left off
+//Restart
+	//Job repository is used to maintain the state of the Job as it is being executed
+	//When something goes wrong,this allows the job to start from where it left off
+
+	//By default, if an uncaught exception is found,Spring Batch will end processing of the JOB
+	//If the Job is restarted with the same params, spring batch will restart from where it left off
+
+	//step scope means each step is going to run its seperate instance
+	
+```
 *Notes By*
 
 ```

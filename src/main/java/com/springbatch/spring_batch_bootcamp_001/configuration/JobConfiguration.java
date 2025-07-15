@@ -1,27 +1,20 @@
 
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
-import com.springbatch.spring_batch_bootcamp_001.domain.*;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.database.JdbcPagingItemReader;
-import org.springframework.batch.item.database.Order;
-import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.support.CompositeItemProcessor;
+import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.FileSystemResource;
 
-import javax.sql.DataSource;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,78 +29,54 @@ public class JobConfiguration {
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
 
-	@Autowired
-	public DataSource dataSource;
+	//Restart
+	//Job repository is used to maintain the state of the Job as it is being executed
+	//When something goes wrong,this allows the job to start from where it left off
 
+	//By default, if an uncaught exception is found,Spring Batch will end processing of the JOB
+	//If the Job is restarted with the same params, spring batch will restart from where it left off
+
+	//step scope means each step is going to run its seperate instance
 	@Bean
-	public JdbcPagingItemReader<Customer> pagingItemReader() {
-		JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
+	@StepScope
+	public Tasklet restartTasklet(){
+		return new Tasklet() {
+			@Override
+			public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+				Map<String, Object> stepExecutionContext = chunkContext.getStepContext().getStepExecutionContext();
 
-		reader.setDataSource(this.dataSource);
-		reader.setFetchSize(10);
-		reader.setRowMapper(new CustomerRowMapper());
-
-		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
-		queryProvider.setSelectClause("id, firstName, lastName, birthdate");
-		queryProvider.setFromClause("from customer");
-
-		Map<String, Order> sortKeys = new HashMap<>(1);
-
-		sortKeys.put("id", Order.ASCENDING);
-
-		queryProvider.setSortKeys(sortKeys);
-
-		reader.setQueryProvider(queryProvider);
-
-		return reader;
+				if(stepExecutionContext.containsKey("ran")) {
+					System.out.println("This time we'll let it go.");
+					return RepeatStatus.FINISHED;
+				}
+				else {
+					System.out.println("I don't think so...");
+					chunkContext.getStepContext().getStepExecution().getExecutionContext().put("ran", true);
+					throw new RuntimeException("Not this time...");
+				}
+			}
+		};
 	}
 
 	@Bean
-	public FlatFileItemWriter<Customer> customerItemWriter() throws Exception {
-		FlatFileItemWriter<Customer> itemWriter = new FlatFileItemWriter<>();
-
-		itemWriter.setLineAggregator(new CustomerLineAggregator());
-		String customerOutputPath = File.createTempFile("customerOutput", ".out").getAbsolutePath();
-		System.out.println(">> Output Path: " + customerOutputPath);
-		itemWriter.setResource(new FileSystemResource(customerOutputPath));
-		itemWriter.afterPropertiesSet();
-
-		return itemWriter;
-	}
-
-	//Spring Batch provides and out of the batch processor called the compositeItem Processor
-	@Bean
-	public CompositeItemProcessor<Customer, Customer> itemProcessor() throws Exception {
-
-		List<ItemProcessor<Customer, Customer>> delegates = new ArrayList<>(2);
-
-		delegates.add(new FilteringItemProcessor());
-		delegates.add(new UpperCaseItemProcessor());
-
-		CompositeItemProcessor<Customer, Customer> compositeItemProcessor =
-				new CompositeItemProcessor<>();
-
-		compositeItemProcessor.setDelegates(delegates);
-		compositeItemProcessor.afterPropertiesSet();
-
-		return compositeItemProcessor;
-	}
-
-	@Bean
-	public Step step1() throws Exception {
+	public Step step1(){
 		return stepBuilderFactory.get("step1")
-				.<Customer, Customer>chunk(10)
-				.reader(pagingItemReader())
-				.processor(itemProcessor())
-				.writer(customerItemWriter())
+				.tasklet(restartTasklet())
 				.build();
 	}
 
+	@Bean
+	public Step step2(){
+		return stepBuilderFactory.get("step2")
+				.tasklet(restartTasklet())
+				.build();
+	}
 
 	@Bean
-	public Job job() throws Exception {
-		return jobBuilderFactory.get("job")
+	public Job job() {
+		return jobBuilderFactory.get("jobRestart")
 				.start(step1())
+				.next(step2())
 				.build();
 	}
 
