@@ -18,7 +18,7 @@ package com.springbatch.spring_batch_bootcamp_001.domain;
 import java.util.Date;
 
 /**
- * @author Michael Minella
+ * @author Mbugua
  */
 public class Customer {
 

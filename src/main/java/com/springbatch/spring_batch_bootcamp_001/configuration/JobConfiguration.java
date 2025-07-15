@@ -15,10 +15,10 @@
  */
 package com.springbatch.spring_batch_bootcamp_001.configuration;
 
-
 import com.springbatch.spring_batch_bootcamp_001.domain.Customer;
+import com.springbatch.spring_batch_bootcamp_001.domain.CustomerLineAggregator;
 import com.springbatch.spring_batch_bootcamp_001.domain.CustomerRowMapper;
-import com.springbatch.spring_batch_bootcamp_001.processor.UpperCaseItemProcessor;
+import com.springbatch.spring_batch_bootcamp_001.domain.FilteringItemProcessor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -26,12 +26,11 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
-import org.springframework.batch.item.xml.StaxEventItemWriter;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.oxm.xstream.XStreamMarshaller;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -53,8 +52,6 @@ public class JobConfiguration {
 	@Autowired
 	public DataSource dataSource;
 
-
-	//Reading from the Database
 	@Bean
 	public JdbcPagingItemReader<Customer> pagingItemReader() {
 		JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
@@ -79,38 +76,22 @@ public class JobConfiguration {
 	}
 
 	@Bean
-	public StaxEventItemWriter<Customer> customerItemWriter() throws Exception {
+	public FlatFileItemWriter<Customer> customerItemWriter() throws Exception {
+		FlatFileItemWriter<Customer> itemWriter = new FlatFileItemWriter<>();
 
-		XStreamMarshaller marshaller = new XStreamMarshaller();
-
-		Map<String, Class> aliases = new HashMap<>();
-		aliases.put("customer", Customer.class);
-
-		marshaller.setAliases(aliases);
-
-		StaxEventItemWriter<Customer> itemWriter = new StaxEventItemWriter<>();
-
-		itemWriter.setRootTagName("customers");
-		itemWriter.setMarshaller(marshaller);
-		String customerOutputPath = File.createTempFile("customerOutput", ".xml").getAbsolutePath();
+		itemWriter.setLineAggregator(new CustomerLineAggregator());
+		String customerOutputPath = File.createTempFile("customerOutput", ".out").getAbsolutePath();
 		System.out.println(">> Output Path: " + customerOutputPath);
 		itemWriter.setResource(new FileSystemResource(customerOutputPath));
-
 		itemWriter.afterPropertiesSet();
 
 		return itemWriter;
 	}
 
 	@Bean
-	public UpperCaseItemProcessor itemProcessor() {
-		return new UpperCaseItemProcessor();
+	public FilteringItemProcessor itemProcessor() {
+		return new FilteringItemProcessor();
 	}
-
-
-	//chunkStep
-	//in a chunk step, the item reader is responsible for reading Input
-	//the item Writer for Writing the Output
-	//In the Processor However is where all the business Logic seats
 
 	@Bean
 	public Step step1() throws Exception {
@@ -122,8 +103,6 @@ public class JobConfiguration {
 				.build();
 	}
 
-
-	//Job
 	@Bean
 	public Job job() throws Exception {
 		return jobBuilderFactory.get("job")

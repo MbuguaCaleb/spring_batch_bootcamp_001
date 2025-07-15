@@ -328,6 +328,7 @@ Both the Job and the step have execution context that maintains state
 //It can for instance take in a customer Object and return an Accounts Object if the customer is related to the account
 
 //processor can also be used to fitler item,
+
 //if we return null to a process call, the items that return null are filtered out
 
 ```

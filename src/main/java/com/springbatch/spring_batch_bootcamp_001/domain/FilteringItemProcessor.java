@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.springbatch.spring_batch_bootcamp_001.processor;
+package com.springbatch.spring_batch_bootcamp_001.domain;
 
 import org.springframework.batch.item.ItemProcessor;
 
 /**
- * @author Mbugua Caleb
+ * @author MbuguaCaleb
  */
 
-//The process method in the Item Processor is allowed to chanhe the type if need be
-//It can for instance take in a customer Object and return an Accounts Object if the customer is related to the account
-public class UpperCaseItemProcessor implements ItemProcessor<Customer, Customer> {
-
+//the below processor will only return odd items
+public class FilteringItemProcessor implements ItemProcessor<Customer, Customer> {
 	@Override
 	public Customer process(Customer item) throws Exception {
-		return new Customer(item.getId(),
-				item.getFirstName().toUpperCase(),
-				item.getLastName().toUpperCase(),
-				item.getBirthdate());
+
+		if(item.getId() % 2 == 0) {
+			return null;
+		}
+		else {
+			return item;
+		}
 	}
 }
