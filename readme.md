@@ -375,6 +375,8 @@ We are able to configure out of the box the number of times we retry or even the
 	//We configure a Step with an exception to indicate that the item should be skipped
 	//in the skipLimit, we let SpringBatch know the items we should skip
 
+ java -jar target/spring_batch_bootcamp_001-0.0.1-SNAPSHOT.jar -skip=writer
+
 ```
 *Notes By*
 
