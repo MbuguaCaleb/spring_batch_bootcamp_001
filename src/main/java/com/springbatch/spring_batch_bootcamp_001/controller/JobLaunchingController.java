@@ -1,46 +1,45 @@
+/*
+ * Copyright 2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.springbatch.spring_batch_bootcamp_001.controller;
 
-
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * @author Michael Minella
+ */
 @RestController
 public class JobLaunchingController {
 
-    //job launcher can be used to launch a job in its simplistic form,
-    //However, to launch more complex jobs we need, JobOperator
-    //Job operator can handle things like restarts and retries when launching a JOB
+	@Autowired
+	private JobOperator jobOperator;
 
-//    @Autowired
-//    private JobLauncher jobLauncher;
+	@RequestMapping(value = "/", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.ACCEPTED)
+	public long launch(@RequestParam("name") String name) throws Exception {
+		return this.jobOperator.start("job", String.format("name=%s", name));
+	}
 
 
-    @Autowired
-    private JobOperator jobOperator;
-
-//    @Autowired
-//    private Job job;
-
-    @RequestMapping(value = "/test/launch", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void launch(@RequestParam("name") String name) throws Exception{
-
-        JobParameters jobParameters =
-                new JobParametersBuilder()
-                .addString("name", name)
-                .toJobParameters();
-
-//        this.jobLauncher.run(job,jobParameters);
-
-        //the JobOperator is able to look the job by its name when it comes to run
-        jobOperator.start("uniqueJobName", String.format("name=%s", name));
-
-    }
-
+	//we stop the Job by the Job ID
+	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+	@ResponseStatus(HttpStatus.OK)
+	public void stop(@PathVariable("id") Long id) throws Exception {
+		this.jobOperator.stop(id);
+	}
 }

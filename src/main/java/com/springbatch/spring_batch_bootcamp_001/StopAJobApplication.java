@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableBatchProcessing
-public class StartingAjobApplication {
+public class StopAJobApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(StartingAjobApplication.class, args);
+        SpringApplication.run(StopAJobApplication.class, args);
     }
 
 
